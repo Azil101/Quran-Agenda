@@ -1,3 +1,6 @@
+/* Arabic Font Support */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -60,9 +63,6 @@
     min-height: 100vh;
   }
 }
-
-/* Arabic Font Support */
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
 
 .arabic-text {
   font-family: 'Amiri', 'Traditional Arabic', 'Arabic Typesetting', serif;
