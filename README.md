@@ -1,5 +1,7 @@
 # Quran Academy Tracker
 
+🌐 **Live App:** https://azil101.github.io/Quran-Agenda/
+
 A comprehensive Quran memorization, tracking, and learning management system for students, teachers, and parents.
 
 ## Features
