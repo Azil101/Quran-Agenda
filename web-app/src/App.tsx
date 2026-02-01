@@ -5,7 +5,9 @@ import { RoleBasedRedirect } from './components/auth/RoleBasedRedirect';
 import { Login } from './pages/auth/Login';
 import { Signup } from './pages/auth/Signup';
 import { StudentDashboard } from './pages/student/StudentDashboard';
+import { QuranPage as StudentQuranPage } from './pages/student/QuranPage';
 import { TeacherDashboard } from './pages/teacher/TeacherDashboard';
+import { QuranPage as TeacherQuranPage } from './pages/teacher/QuranPage';
 import { ParentDashboard } from './pages/parent/ParentDashboard';
 
 function App() {
@@ -36,6 +38,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/student/quran"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentQuranPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Teacher routes */}
           <Route
@@ -43,6 +53,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['teacher']}>
                 <TeacherDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/quran"
+            element={
+              <ProtectedRoute allowedRoles={['teacher']}>
+                <TeacherQuranPage />
               </ProtectedRoute>
             }
           />
