@@ -62,8 +62,9 @@ export class AuthService {
       await this.createRoleDocument(firebaseUser.uid, role);
 
       return userData;
-    } catch (error: any) {
-      throw new Error(this.getErrorMessage(error.code));
+    } catch (error) {
+      const firebaseError = error as { code?: string };
+      throw new Error(this.getErrorMessage(firebaseError.code || ''));
     }
   }
 
@@ -93,8 +94,9 @@ export class AuthService {
         createdAt: userData.createdAt || new Date(),
         updatedAt: userData.updatedAt || new Date(),
       };
-    } catch (error: any) {
-      throw new Error(this.getErrorMessage(error.code));
+    } catch (error) {
+      const firebaseError = error as { code?: string };
+      throw new Error(this.getErrorMessage(firebaseError.code || ''));
     }
   }
 
@@ -104,7 +106,7 @@ export class AuthService {
   static async signOut(): Promise<void> {
     try {
       await signOut(auth);
-    } catch (error: any) {
+    } catch {
       throw new Error('Failed to sign out');
     }
   }

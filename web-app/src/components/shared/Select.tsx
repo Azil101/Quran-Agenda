@@ -9,15 +9,21 @@ export interface SelectProps
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, error, options, ...props }, ref) => {
+  ({ className, label, error, options, id, ...props }, ref) => {
+    const selectId = id || `select-${Math.random().toString(36).substring(2, 9)}`;
+    const errorId = error ? `${selectId}-error` : undefined;
+
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-foreground mb-2">
+          <label htmlFor={selectId} className="block text-sm font-medium text-foreground mb-2">
             {label}
           </label>
         )}
         <select
+          id={selectId}
+          aria-describedby={errorId}
+          aria-invalid={error ? 'true' : 'false'}
           className={cn(
             'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
             'ring-offset-background',
@@ -35,7 +41,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             </option>
           ))}
         </select>
-        {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
+        {error && <p id={errorId} className="mt-1 text-sm text-destructive">{error}</p>}
       </div>
     );
   }

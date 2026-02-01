@@ -86,7 +86,7 @@ export class QuranService {
     includeTranslation: boolean = false
   ): Promise<VersesResponse> {
     try {
-      const params: any = {
+      const params: Record<string, number> = {
         page,
         per_page: perPage,
       };
@@ -117,7 +117,7 @@ export class QuranService {
     includeTranslation: boolean = false
   ): Promise<Verse> {
     try {
-      const params: any = {};
+      const params: Record<string, number> = {};
 
       if (includeTranslation) {
         params.translations = 131;
@@ -144,7 +144,7 @@ export class QuranService {
     includeTranslation: boolean = false
   ): Promise<Verse[]> {
     try {
-      const params: any = {};
+      const params: Record<string, number> = {};
 
       if (includeTranslation) {
         params.translations = 131;
@@ -170,7 +170,7 @@ export class QuranService {
     includeTranslation: boolean = false
   ): Promise<Verse[]> {
     try {
-      const params: any = {};
+      const params: Record<string, number> = {};
 
       if (includeTranslation) {
         params.translations = 131;
@@ -191,7 +191,7 @@ export class QuranService {
   /**
    * Search verses by keyword
    */
-  static async searchVerses(query: string, page: number = 1): Promise<any> {
+  static async searchVerses(query: string, page: number = 1): Promise<{ search: { results: Verse[] } }> {
     try {
       const response = await axios.get(`${QURAN_API_BASE_URL}/search`, {
         params: {

@@ -70,8 +70,9 @@ export const Signup: React.FC = () => {
         formData.role
       );
       navigate('/dashboard');
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+      const err = error as Error;
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -112,7 +113,7 @@ export const Signup: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md text-sm">
+              <div role="alert" className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md text-sm">
                 {error}
               </div>
             )}

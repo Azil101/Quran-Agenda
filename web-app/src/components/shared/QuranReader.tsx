@@ -29,6 +29,21 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
 
   // Load verses when surah changes
   useEffect(() => {
+    const loadVerses = async (surahId: number) => {
+      setLoading(true);
+      try {
+        const surahInfo = await QuranService.getSurah(surahId);
+        setCurrentSurahInfo(surahInfo);
+
+        const response = await QuranService.getVerses(surahId, 1, 286, showTranslation);
+        setVerses(response.verses);
+      } catch (error) {
+        console.error('Error loading verses:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (selectedSurah) {
       loadVerses(selectedSurah);
     }
@@ -40,21 +55,6 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
       setSurahs(data);
     } catch (error) {
       console.error('Error loading surahs:', error);
-    }
-  };
-
-  const loadVerses = async (surahId: number) => {
-    setLoading(true);
-    try {
-      const surahInfo = await QuranService.getSurah(surahId);
-      setCurrentSurahInfo(surahInfo);
-
-      const response = await QuranService.getVerses(surahId, 1, 286, showTranslation);
-      setVerses(response.verses);
-    } catch (error) {
-      console.error('Error loading verses:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -182,7 +182,7 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
 
       {/* Bismillah */}
       {selectedSurah !== 1 && selectedSurah !== 9 && (
-        <div className="text-center arabic-text text-3xl py-6">
+        <div lang="ar" className="text-center arabic-text text-3xl py-6">
           بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
         </div>
       )}
@@ -219,7 +219,7 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
                 </div>
 
                 {/* Arabic Text */}
-                <div className="arabic-text text-2xl md:text-3xl leading-loose text-right mb-4">
+                <div lang="ar" className="arabic-text text-2xl md:text-3xl leading-loose text-right mb-4">
                   {verse.text_uthmani}
                 </div>
 
