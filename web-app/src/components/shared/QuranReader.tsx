@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { QuranService } from '../../services/quran.service';
 import type { Surah, Verse } from '../../services/quran.service';
 import { Button, Card, CardHeader, CardTitle, CardContent, Select } from '../shared';
 import { cn } from '../../lib/utils';
+import { logger } from '../../lib/logger';
+import { QURAN_API, SURAH_WITH_BISMILLAH_AS_VERSE, SURAHS_WITHOUT_BISMILLAH } from '../../lib/constants';
 
 interface QuranReaderProps {
   mode?: 'student' | 'teacher';
   onSelectRange?: (fromSurah: number, fromAyah: number, toSurah: number, toAyah: number) => void;
 }
 
-export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSelectRange }) => {
+export const QuranReader: React.FC<QuranReaderProps> = React.memo(({ mode = 'student', onSelectRange }) => {
   const [surahs, setSurahs] = useState<Surah[]>([]);
   const [selectedSurah, setSelectedSurah] = useState<number>(1);
   const [verses, setVerses] = useState<Verse[]>([]);
@@ -23,42 +25,47 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
   const [selectedTo, setSelectedTo] = useState<{ surah: number; ayah: number } | null>(null);
 
   // Load all surahs on mount
-  useEffect(() => {
-    loadSurahs();
-  }, []);
-
-  // Load verses when surah changes
-  useEffect(() => {
-    const loadVerses = async (surahId: number) => {
-      setLoading(true);
-      try {
-        const surahInfo = await QuranService.getSurah(surahId);
-        setCurrentSurahInfo(surahInfo);
-
-        const response = await QuranService.getVerses(surahId, 1, 286, showTranslation);
-        setVerses(response.verses);
-      } catch (error) {
-        console.error('Error loading verses:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (selectedSurah) {
-      loadVerses(selectedSurah);
-    }
-  }, [selectedSurah, showTranslation]);
-
-  const loadSurahs = async () => {
+  const loadSurahs = useCallback(async () => {
     try {
       const data = await QuranService.getAllSurahs();
       setSurahs(data);
     } catch (error) {
-      console.error('Error loading surahs:', error);
+      logger.error('Failed to load surahs', error);
     }
-  };
+  }, []);
 
-  const handleVerseClick = (verse: Verse) => {
+  useEffect(() => {
+    loadSurahs();
+  }, [loadSurahs]);
+
+  // Load verses when surah changes
+  const loadVerses = useCallback(async (surahId: number, includeTranslation: boolean) => {
+    setLoading(true);
+    try {
+      const surahInfo = await QuranService.getSurah(surahId);
+      setCurrentSurahInfo(surahInfo);
+
+      const response = await QuranService.getVerses(
+        surahId,
+        1,
+        QURAN_API.MAX_VERSES_PER_SURAH,
+        includeTranslation
+      );
+      setVerses(response.verses);
+    } catch (error) {
+      logger.error('Failed to load verses', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedSurah) {
+      loadVerses(selectedSurah, showTranslation);
+    }
+  }, [selectedSurah, showTranslation, loadVerses]);
+
+  const handleVerseClick = useCallback((verse: Verse) => {
     if (mode === 'teacher' && selectionMode) {
       if (!selectedFrom) {
         setSelectedFrom({ surah: selectedSurah, ayah: verse.verse_number });
@@ -70,9 +77,9 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
         setSelectedTo(null);
       }
     }
-  };
+  }, [mode, selectionMode, selectedFrom, selectedTo, selectedSurah]);
 
-  const handleConfirmSelection = () => {
+  const handleConfirmSelection = useCallback(() => {
     if (selectedFrom && selectedTo && onSelectRange) {
       onSelectRange(
         selectedFrom.surah,
@@ -84,9 +91,19 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
       setSelectedFrom(null);
       setSelectedTo(null);
     }
-  };
+  }, [selectedFrom, selectedTo, onSelectRange]);
 
-  const isVerseInRange = (verse: Verse) => {
+  const handleToggleTranslation = useCallback(() => {
+    setShowTranslation(!showTranslation);
+  }, [showTranslation]);
+
+  const handleToggleSelectionMode = useCallback(() => {
+    setSelectionMode(!selectionMode);
+    setSelectedFrom(null);
+    setSelectedTo(null);
+  }, [selectionMode]);
+
+  const isVerseInRange = useCallback((verse: Verse) => {
     if (!selectedFrom) return false;
     if (!selectedTo) return verse.verse_number === selectedFrom.ayah;
 
@@ -94,7 +111,21 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
     const toAyah = Math.max(selectedFrom.ayah, selectedTo.ayah);
 
     return verse.verse_number >= fromAyah && verse.verse_number <= toAyah;
-  };
+  }, [selectedFrom, selectedTo]);
+
+  const surahOptions = useMemo(() =>
+    surahs.map((surah) => ({
+      value: String(surah.id),
+      label: `${surah.id}. ${surah.name_simple} - ${surah.name_arabic}`,
+    })),
+    [surahs]
+  );
+
+  const showBismillah = useMemo(() =>
+    selectedSurah !== SURAH_WITH_BISMILLAH_AS_VERSE &&
+    !SURAHS_WITHOUT_BISMILLAH.includes(selectedSurah),
+    [selectedSurah]
+  );
 
   return (
     <div className="space-y-6">
@@ -110,16 +141,13 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
               label="Select Surah"
               value={String(selectedSurah)}
               onChange={(e) => setSelectedSurah(Number(e.target.value))}
-              options={surahs.map((surah) => ({
-                value: String(surah.id),
-                label: `${surah.id}. ${surah.name_simple} - ${surah.name_arabic}`,
-              }))}
+              options={surahOptions}
             />
 
             <div className="flex items-end gap-2">
               <Button
                 variant={showTranslation ? 'primary' : 'outline'}
-                onClick={() => setShowTranslation(!showTranslation)}
+                onClick={handleToggleTranslation}
                 className="flex-1"
               >
                 {showTranslation ? 'Hide' : 'Show'} Translation
@@ -128,11 +156,7 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
               {mode === 'teacher' && (
                 <Button
                   variant={selectionMode ? 'primary' : 'outline'}
-                  onClick={() => {
-                    setSelectionMode(!selectionMode);
-                    setSelectedFrom(null);
-                    setSelectedTo(null);
-                  }}
+                  onClick={handleToggleSelectionMode}
                   className="flex-1"
                 >
                   {selectionMode ? 'Cancel Selection' : 'Select Range'}
@@ -181,7 +205,7 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
       </Card>
 
       {/* Bismillah */}
-      {selectedSurah !== 1 && selectedSurah !== 9 && (
+      {showBismillah && (
         <div lang="ar" className="text-center arabic-text text-3xl py-6">
           بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
         </div>
@@ -238,4 +262,6 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ mode = 'student', onSe
       </div>
     </div>
   );
-};
+});
+
+QuranReader.displayName = 'QuranReader';

@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { logger } from '../lib/logger';
+import { QURAN_API, RECITERS } from '../lib/constants';
 
 const QURAN_API_BASE_URL = import.meta.env.VITE_QURAN_API_BASE_URL || 'https://api.quran.com/api/v4';
 
@@ -52,7 +54,7 @@ export class QuranService {
       const response = await axios.get(`${QURAN_API_BASE_URL}/chapters`);
       return response.data.chapters;
     } catch (error) {
-      console.error('Error fetching surahs:', error);
+      logger.error('Failed to fetch Quran chapters', error);
       throw new Error('Failed to fetch Quran chapters');
     }
   }
@@ -67,7 +69,7 @@ export class QuranService {
       );
       return response.data.chapter;
     } catch (error) {
-      console.error('Error fetching surah:', error);
+      logger.error(`Failed to fetch Surah ${surahId}`, error);
       throw new Error(`Failed to fetch Surah ${surahId}`);
     }
   }
@@ -93,7 +95,7 @@ export class QuranService {
 
       // Add translation parameter if requested
       if (includeTranslation) {
-        params.translations = 131; // Dr. Mustafa Khattab - The Clear Quran
+        params.translations = QURAN_API.DEFAULT_TRANSLATION_ID;
       }
 
       const response = await axios.get<VersesResponse>(
@@ -103,7 +105,7 @@ export class QuranService {
 
       return response.data;
     } catch (error) {
-      console.error('Error fetching verses:', error);
+      logger.error(`Failed to fetch verses for Surah ${surahId}`, error);
       throw new Error(`Failed to fetch verses for Surah ${surahId}`);
     }
   }
@@ -120,7 +122,7 @@ export class QuranService {
       const params: Record<string, number> = {};
 
       if (includeTranslation) {
-        params.translations = 131;
+        params.translations = QURAN_API.DEFAULT_TRANSLATION_ID;
       }
 
       const verseKey = `${surahId}:${ayahNumber}`;
@@ -131,7 +133,7 @@ export class QuranService {
 
       return response.data.verse;
     } catch (error) {
-      console.error('Error fetching verse:', error);
+      logger.error(`Failed to fetch verse ${surahId}:${ayahNumber}`, error);
       throw new Error(`Failed to fetch verse ${surahId}:${ayahNumber}`);
     }
   }
@@ -147,7 +149,7 @@ export class QuranService {
       const params: Record<string, number> = {};
 
       if (includeTranslation) {
-        params.translations = 131;
+        params.translations = QURAN_API.DEFAULT_TRANSLATION_ID;
       }
 
       const response = await axios.get(
@@ -157,7 +159,7 @@ export class QuranService {
 
       return response.data.verses;
     } catch (error) {
-      console.error('Error fetching juz:', error);
+      logger.error(`Failed to fetch Juz ${juzNumber}`, error);
       throw new Error(`Failed to fetch Juz ${juzNumber}`);
     }
   }
@@ -173,7 +175,7 @@ export class QuranService {
       const params: Record<string, number> = {};
 
       if (includeTranslation) {
-        params.translations = 131;
+        params.translations = QURAN_API.DEFAULT_TRANSLATION_ID;
       }
 
       const response = await axios.get(
@@ -183,7 +185,7 @@ export class QuranService {
 
       return response.data.verses;
     } catch (error) {
-      console.error('Error fetching page:', error);
+      logger.error(`Failed to fetch page ${pageNumber}`, error);
       throw new Error(`Failed to fetch page ${pageNumber}`);
     }
   }
@@ -203,7 +205,7 @@ export class QuranService {
 
       return response.data;
     } catch (error) {
-      console.error('Error searching verses:', error);
+      logger.error('Failed to search verses', error);
       throw new Error('Failed to search verses');
     }
   }
@@ -221,12 +223,6 @@ export class QuranService {
    * Get popular reciters list
    */
   static getReciters() {
-    return [
-      { id: 7, name: 'Mishary Rashid Alafasy', arabicName: 'مشاري العفاسي' },
-      { id: 2, name: "Abdulbasit 'Abdus-Samad", arabicName: 'عبد الباسط عبد الصمد' },
-      { id: 3, name: 'Abdur-Rahman as-Sudais', arabicName: 'عبد الرحمن السديس' },
-      { id: 5, name: 'Saad al-Ghamidi', arabicName: 'سعد الغامدي' },
-      { id: 9, name: 'Mahmoud Khalil Al-Husary', arabicName: 'محمود خليل الحصري' },
-    ];
+    return RECITERS.POPULAR;
   }
 }

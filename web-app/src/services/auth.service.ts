@@ -11,6 +11,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { RECITERS } from '../lib/constants';
 import type { User, UserRole, Student, Teacher, Parent } from '../types';
 
 export class AuthService {
@@ -168,7 +169,7 @@ export class AuthService {
             longestStreak: 0,
           },
           preferences: {
-            preferredReciter: 'ar.alafasy', // Mishary Alafasy default
+            preferredReciter: RECITERS.DEFAULT,
             quizDifficulty: 'medium',
             gradingSystem: 'letter',
             reminderTimes: ['08:00', '16:00'],

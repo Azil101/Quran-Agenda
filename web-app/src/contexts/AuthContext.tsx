@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { AuthService } from '../services/auth.service';
+import { logger } from '../lib/logger';
 import type { User, UserRole } from '../types';
 
 interface AuthContextType {
@@ -43,7 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userData = await AuthService.getCurrentUser();
           setUser(userData);
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          logger.error('Failed to fetch user data after authentication', error);
           setUser(null);
         }
       } else {
@@ -55,12 +56,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const userData = await AuthService.signIn(email, password);
     setUser(userData);
-  };
+  }, []);
 
-  const signUp = async (
+  const signUp = useCallback(async (
     email: string,
     password: string,
     displayName: string,
@@ -68,12 +69,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ) => {
     const userData = await AuthService.signUp(email, password, displayName, role);
     setUser(userData);
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await AuthService.signOut();
     setUser(null);
-  };
+  }, []);
 
   const value: AuthContextType = {
     user,

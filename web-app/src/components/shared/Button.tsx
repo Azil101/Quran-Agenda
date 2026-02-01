@@ -9,7 +9,7 @@ export interface ButtonProps
   children: React.ReactNode;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+export const Button = React.memo(React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       className,
@@ -84,6 +84,6 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       </button>
     );
   }
-);
+));
 
 Button.displayName = 'Button';
