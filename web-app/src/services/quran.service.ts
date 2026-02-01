@@ -211,9 +211,8 @@ export class QuranService {
   /**
    * Get audio recitation URL for a surah
    * @param surahId - The surah number
-   * @param reciterId - Reciter ID (default: 7 - Mishary Alafasy)
    */
-  static getAudioUrl(surahId: number, reciterId: number = 7): string {
+  static getAudioUrl(surahId: number): string {
     const paddedSurah = String(surahId).padStart(3, '0');
     return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${paddedSurah}.mp3`;
   }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { QuranService, Surah, Verse } from '../../services/quran.service';
+import { QuranService } from '../../services/quran.service';
+import type { Surah, Verse } from '../../services/quran.service';
 import { Button, Card, CardHeader, CardTitle, CardContent, Select } from '../shared';
 import { cn } from '../../lib/utils';
 
