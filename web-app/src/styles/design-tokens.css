@@ -1,0 +1,406 @@
+/* ==========================================================================
+   QURAN AGENDA - DESIGN TOKENS
+   A comprehensive design system for Islamic educational applications
+   ========================================================================== */
+
+/* ==========================================================================
+   COLOR PALETTE
+   Islamic-appropriate colors with full shade ranges (50-950)
+   ========================================================================== */
+
+:root {
+  /* --------------------------------------------------------------------------
+     PRIMARY - Islamic Green (Emerald-inspired)
+     Used for: Main actions, progress indicators, primary CTAs
+     -------------------------------------------------------------------------- */
+  --color-primary-50: 240 253 244;
+  --color-primary-100: 209 250 229;
+  --color-primary-200: 167 243 208;
+  --color-primary-300: 110 231 183;
+  --color-primary-400: 52 211 153;
+  --color-primary-500: 16 185 129;
+  --color-primary-600: 5 150 105;
+  --color-primary-700: 4 120 87;
+  --color-primary-800: 6 95 70;
+  --color-primary-900: 6 78 59;
+  --color-primary-950: 2 44 34;
+
+  /* --------------------------------------------------------------------------
+     SECONDARY - Teal (Supporting color)
+     Used for: Secondary actions, highlights, accents
+     -------------------------------------------------------------------------- */
+  --color-secondary-50: 240 253 250;
+  --color-secondary-100: 204 251 241;
+  --color-secondary-200: 153 246 228;
+  --color-secondary-300: 94 234 212;
+  --color-secondary-400: 45 212 191;
+  --color-secondary-500: 20 184 166;
+  --color-secondary-600: 13 148 136;
+  --color-secondary-700: 15 118 110;
+  --color-secondary-800: 17 94 89;
+  --color-secondary-900: 19 78 74;
+  --color-secondary-950: 4 47 46;
+
+  /* --------------------------------------------------------------------------
+     GOLD/AMBER - Achievement & Celebration
+     Used for: Badges, rewards, achievements, celebrations
+     -------------------------------------------------------------------------- */
+  --color-gold-50: 255 251 235;
+  --color-gold-100: 254 243 199;
+  --color-gold-200: 253 230 138;
+  --color-gold-300: 252 211 77;
+  --color-gold-400: 251 191 36;
+  --color-gold-500: 245 158 11;
+  --color-gold-600: 217 119 6;
+  --color-gold-700: 180 83 9;
+  --color-gold-800: 146 64 14;
+  --color-gold-900: 120 53 15;
+  --color-gold-950: 69 26 3;
+
+  /* --------------------------------------------------------------------------
+     SAPPHIRE/BLUE - Information & Trust
+     Used for: Info messages, links, trust indicators
+     -------------------------------------------------------------------------- */
+  --color-sapphire-50: 239 246 255;
+  --color-sapphire-100: 219 234 254;
+  --color-sapphire-200: 191 219 254;
+  --color-sapphire-300: 147 197 253;
+  --color-sapphire-400: 96 165 250;
+  --color-sapphire-500: 59 130 246;
+  --color-sapphire-600: 37 99 235;
+  --color-sapphire-700: 29 78 216;
+  --color-sapphire-800: 30 64 175;
+  --color-sapphire-900: 30 58 138;
+  --color-sapphire-950: 23 37 84;
+
+  /* --------------------------------------------------------------------------
+     SUCCESS - Green
+     Used for: Success states, completed tasks, positive feedback
+     -------------------------------------------------------------------------- */
+  --color-success-50: 240 253 244;
+  --color-success-100: 220 252 231;
+  --color-success-200: 187 247 208;
+  --color-success-300: 134 239 172;
+  --color-success-400: 74 222 128;
+  --color-success-500: 34 197 94;
+  --color-success-600: 22 163 74;
+  --color-success-700: 21 128 61;
+  --color-success-800: 22 101 52;
+  --color-success-900: 20 83 45;
+  --color-success-950: 5 46 22;
+
+  /* --------------------------------------------------------------------------
+     WARNING - Amber/Orange
+     Used for: Warnings, pending states, attention needed
+     -------------------------------------------------------------------------- */
+  --color-warning-50: 255 251 235;
+  --color-warning-100: 254 243 199;
+  --color-warning-200: 253 230 138;
+  --color-warning-300: 252 211 77;
+  --color-warning-400: 251 191 36;
+  --color-warning-500: 245 158 11;
+  --color-warning-600: 217 119 6;
+  --color-warning-700: 180 83 9;
+  --color-warning-800: 146 64 14;
+  --color-warning-900: 120 53 15;
+  --color-warning-950: 69 26 3;
+
+  /* --------------------------------------------------------------------------
+     ERROR/DESTRUCTIVE - Red
+     Used for: Errors, destructive actions, critical warnings
+     -------------------------------------------------------------------------- */
+  --color-error-50: 254 242 242;
+  --color-error-100: 254 226 226;
+  --color-error-200: 254 202 202;
+  --color-error-300: 252 165 165;
+  --color-error-400: 248 113 113;
+  --color-error-500: 239 68 68;
+  --color-error-600: 220 38 38;
+  --color-error-700: 185 28 28;
+  --color-error-800: 153 27 27;
+  --color-error-900: 127 29 29;
+  --color-error-950: 69 10 10;
+
+  /* --------------------------------------------------------------------------
+     NEUTRAL - Slate
+     Used for: Text, borders, backgrounds
+     -------------------------------------------------------------------------- */
+  --color-neutral-50: 248 250 252;
+  --color-neutral-100: 241 245 249;
+  --color-neutral-200: 226 232 240;
+  --color-neutral-300: 203 213 225;
+  --color-neutral-400: 148 163 184;
+  --color-neutral-500: 100 116 139;
+  --color-neutral-600: 71 85 105;
+  --color-neutral-700: 51 65 85;
+  --color-neutral-800: 30 41 59;
+  --color-neutral-900: 15 23 42;
+  --color-neutral-950: 2 6 23;
+
+  /* ==========================================================================
+     TYPOGRAPHY
+     ========================================================================== */
+
+  /* Font Families */
+  --font-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-arabic: 'Amiri', 'Scheherazade New', 'Traditional Arabic', 'Arabic Typesetting', serif;
+  --font-arabic-modern: 'Noto Naskh Arabic', 'Amiri', serif;
+  --font-quran: 'KFGQPC Uthmanic Script HAFS', 'Amiri Quran', 'Amiri', serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  /* Font Sizes - Fluid Typography Scale */
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.8125rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 0.9375rem);
+  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.0625rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
+  --text-3xl: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem);
+  --text-4xl: clamp(2.25rem, 1.75rem + 2.5vw, 3rem);
+  --text-5xl: clamp(3rem, 2.25rem + 3.75vw, 4rem);
+
+  /* Arabic Text Sizes - Larger for readability */
+  --text-arabic-sm: clamp(1.125rem, 1rem + 0.625vw, 1.375rem);
+  --text-arabic-base: clamp(1.5rem, 1.25rem + 1.25vw, 1.875rem);
+  --text-arabic-lg: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem);
+  --text-arabic-xl: clamp(2.25rem, 1.75rem + 2.5vw, 3.25rem);
+  --text-arabic-2xl: clamp(2.75rem, 2rem + 3.75vw, 4rem);
+
+  /* Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+  --leading-arabic: 2.5; /* Extra generous for Arabic script */
+
+  /* Font Weights */
+  --font-thin: 100;
+  --font-extralight: 200;
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+
+  /* Letter Spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* ==========================================================================
+     SPACING
+     ========================================================================== */
+
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem;
+  --space-1: 0.25rem;
+  --space-1-5: 0.375rem;
+  --space-2: 0.5rem;
+  --space-2-5: 0.625rem;
+  --space-3: 0.75rem;
+  --space-3-5: 0.875rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+  --space-10: 2.5rem;
+  --space-11: 2.75rem;
+  --space-12: 3rem;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-28: 7rem;
+  --space-32: 8rem;
+  --space-36: 9rem;
+  --space-40: 10rem;
+  --space-44: 11rem;
+  --space-48: 12rem;
+  --space-52: 13rem;
+  --space-56: 14rem;
+  --space-60: 15rem;
+  --space-64: 16rem;
+  --space-72: 18rem;
+  --space-80: 20rem;
+  --space-96: 24rem;
+
+  /* ==========================================================================
+     BORDER RADIUS
+     ========================================================================== */
+
+  --radius-none: 0;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ==========================================================================
+     SHADOWS
+     ========================================================================== */
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+
+  /* Colored Shadows */
+  --shadow-primary: 0 4px 14px 0 rgb(var(--color-primary-500) / 0.3);
+  --shadow-success: 0 4px 14px 0 rgb(var(--color-success-500) / 0.3);
+  --shadow-warning: 0 4px 14px 0 rgb(var(--color-warning-500) / 0.3);
+  --shadow-error: 0 4px 14px 0 rgb(var(--color-error-500) / 0.3);
+  --shadow-gold: 0 4px 14px 0 rgb(var(--color-gold-500) / 0.3);
+
+  /* ==========================================================================
+     TRANSITIONS
+     ========================================================================== */
+
+  --duration-75: 75ms;
+  --duration-100: 100ms;
+  --duration-150: 150ms;
+  --duration-200: 200ms;
+  --duration-300: 300ms;
+  --duration-500: 500ms;
+  --duration-700: 700ms;
+  --duration-1000: 1000ms;
+
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* ==========================================================================
+     Z-INDEX
+     ========================================================================== */
+
+  --z-0: 0;
+  --z-10: 10;
+  --z-20: 20;
+  --z-30: 30;
+  --z-40: 40;
+  --z-50: 50;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+
+  /* ==========================================================================
+     BREAKPOINTS (for reference - use Tailwind's responsive classes)
+     ========================================================================== */
+
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ==========================================================================
+     ISLAMIC DECORATIVE PATTERNS (SVG Data URIs)
+     ========================================================================== */
+
+  /* Geometric star pattern */
+  --pattern-islamic-star: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L36.18 23.82L60 30L36.18 36.18L30 60L23.82 36.18L0 30L23.82 23.82L30 0Z' fill='%2310B981' fill-opacity='0.05'/%3E%3C/svg%3E");
+
+  /* Arabesque border pattern */
+  --pattern-arabesque: url("data:image/svg+xml,%3Csvg width='80' height='20' viewBox='0 0 80 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10C10 10 10 0 20 0C30 0 30 10 40 10C50 10 50 0 60 0C70 0 70 10 80 10' stroke='%2310B981' stroke-width='1' fill='none' stroke-opacity='0.2'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   SEMANTIC COLOR MAPPINGS
+   ========================================================================== */
+
+:root {
+  /* Background Colors */
+  --bg-page: rgb(var(--color-neutral-50));
+  --bg-surface: rgb(255 255 255);
+  --bg-elevated: rgb(255 255 255);
+  --bg-muted: rgb(var(--color-neutral-100));
+  --bg-subtle: rgb(var(--color-neutral-50));
+
+  /* Text Colors */
+  --text-primary: rgb(var(--color-neutral-900));
+  --text-secondary: rgb(var(--color-neutral-600));
+  --text-muted: rgb(var(--color-neutral-500));
+  --text-disabled: rgb(var(--color-neutral-400));
+  --text-inverse: rgb(255 255 255);
+
+  /* Border Colors */
+  --border-default: rgb(var(--color-neutral-200));
+  --border-muted: rgb(var(--color-neutral-100));
+  --border-emphasis: rgb(var(--color-neutral-300));
+  --border-focus: rgb(var(--color-primary-500));
+}
+
+/* Dark Mode */
+.dark {
+  --bg-page: rgb(var(--color-neutral-950));
+  --bg-surface: rgb(var(--color-neutral-900));
+  --bg-elevated: rgb(var(--color-neutral-800));
+  --bg-muted: rgb(var(--color-neutral-800));
+  --bg-subtle: rgb(var(--color-neutral-900));
+
+  --text-primary: rgb(var(--color-neutral-50));
+  --text-secondary: rgb(var(--color-neutral-300));
+  --text-muted: rgb(var(--color-neutral-400));
+  --text-disabled: rgb(var(--color-neutral-500));
+  --text-inverse: rgb(var(--color-neutral-900));
+
+  --border-default: rgb(var(--color-neutral-700));
+  --border-muted: rgb(var(--color-neutral-800));
+  --border-emphasis: rgb(var(--color-neutral-600));
+  --border-focus: rgb(var(--color-primary-400));
+}
+
+/* ==========================================================================
+   GRADIENT PRESETS
+   ========================================================================== */
+
+:root {
+  /* Primary Gradients */
+  --gradient-primary: linear-gradient(135deg, rgb(var(--color-primary-400)), rgb(var(--color-primary-600)));
+  --gradient-primary-soft: linear-gradient(135deg, rgb(var(--color-primary-50)), rgb(var(--color-primary-100)));
+  --gradient-primary-vibrant: linear-gradient(135deg, rgb(var(--color-primary-500)), rgb(var(--color-secondary-500)));
+
+  /* Gold/Achievement Gradients */
+  --gradient-gold: linear-gradient(135deg, rgb(var(--color-gold-300)), rgb(var(--color-gold-500)));
+  --gradient-celebration: linear-gradient(135deg, rgb(var(--color-gold-400)), rgb(var(--color-primary-500)));
+
+  /* Background Gradients */
+  --gradient-hero: linear-gradient(180deg, rgb(var(--color-primary-50)) 0%, rgb(255 255 255) 100%);
+  --gradient-card: linear-gradient(180deg, rgb(255 255 255) 0%, rgb(var(--color-neutral-50)) 100%);
+
+  /* Overlay Gradients */
+  --gradient-overlay-dark: linear-gradient(180deg, transparent 0%, rgb(0 0 0 / 0.6) 100%);
+  --gradient-overlay-light: linear-gradient(180deg, transparent 0%, rgb(255 255 255 / 0.9) 100%);
+
+  /* Islamic Pattern Overlay */
+  --gradient-islamic: linear-gradient(135deg, rgb(var(--color-primary-600) / 0.9), rgb(var(--color-secondary-700) / 0.9));
+}
+
+/* Dark Mode Gradients */
+.dark {
+  --gradient-hero: linear-gradient(180deg, rgb(var(--color-neutral-900)) 0%, rgb(var(--color-neutral-950)) 100%);
+  --gradient-card: linear-gradient(180deg, rgb(var(--color-neutral-800)) 0%, rgb(var(--color-neutral-900)) 100%);
+  --gradient-primary-soft: linear-gradient(135deg, rgb(var(--color-primary-950)), rgb(var(--color-primary-900)));
+}

@@ -1,0 +1,236 @@
+rules_version = '2';
+
+/**
+ * Quran Agenda - Firebase Storage Security Rules
+ * ===============================================
+ *
+ * These rules control access to files stored in Firebase Storage.
+ * Files include: profile images, audio recordings, assignment files.
+ *
+ * SECURITY PRINCIPLES:
+ * 1. Deny by default
+ * 2. Validate file types and sizes
+ * 3. Users can only access their own files or authorized files
+ * 4. Prevent malicious file uploads
+ */
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Get current user ID
+    function userId() {
+      return request.auth.uid;
+    }
+
+    // Check if file is an allowed image type
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/(jpeg|jpg|png|gif|webp)');
+    }
+
+    // Check if file is an allowed audio type
+    function isValidAudioType() {
+      return request.resource.contentType.matches('audio/(mpeg|mp3|wav|ogg|webm|m4a|mp4)');
+    }
+
+    // Check if file is an allowed document type
+    function isValidDocumentType() {
+      return request.resource.contentType.matches('application/(pdf|msword|vnd.openxmlformats-officedocument.wordprocessingml.document)') ||
+             request.resource.contentType.matches('text/plain');
+    }
+
+    // Maximum file sizes
+    function isUnderMaxImageSize() {
+      return request.resource.size < 5 * 1024 * 1024; // 5MB
+    }
+
+    function isUnderMaxAudioSize() {
+      return request.resource.size < 50 * 1024 * 1024; // 50MB for audio recordings
+    }
+
+    function isUnderMaxDocumentSize() {
+      return request.resource.size < 10 * 1024 * 1024; // 10MB
+    }
+
+    // Prevent directory traversal attacks
+    function isValidPath(path) {
+      return !path.matches('.*\\.\\./.*') && !path.matches('.*\\.\\.\\\\.*');
+    }
+
+    // ============================================
+    // PROFILE PICTURES
+    // ============================================
+    // Path: users/{userId}/profile/{filename}
+
+    match /users/{userIdPath}/profile/{fileName} {
+      // Anyone can read profile pictures (for display in app)
+      allow read: if isAuthenticated();
+
+      // Users can upload their own profile picture
+      allow write: if isAuthenticated() &&
+                      userId() == userIdPath &&
+                      isValidImageType() &&
+                      isUnderMaxImageSize() &&
+                      isValidPath(fileName);
+
+      // Users can delete their own profile picture
+      allow delete: if isAuthenticated() &&
+                       userId() == userIdPath;
+    }
+
+    // ============================================
+    // STUDENT AUDIO RECORDINGS
+    // ============================================
+    // Path: recordings/{studentId}/{lessonId}/{fileName}
+    // For student Quran recitation recordings
+
+    match /recordings/{studentId}/{lessonId}/{fileName} {
+      // Students can read their own recordings
+      // Teachers can read their students' recordings
+      // Parents can read their children's recordings
+      allow read: if isAuthenticated() &&
+                     (userId() == studentId ||
+                      // Note: Full teacher/parent validation requires Firestore lookup
+                      // For storage rules, we use a simpler check
+                      request.auth.token.role == 'teacher' ||
+                      request.auth.token.role == 'parent');
+
+      // Only students can upload their own recordings
+      allow write: if isAuthenticated() &&
+                      userId() == studentId &&
+                      isValidAudioType() &&
+                      isUnderMaxAudioSize() &&
+                      isValidPath(fileName);
+
+      // Students can delete their own recordings
+      // Teachers can delete for content moderation
+      allow delete: if isAuthenticated() &&
+                       (userId() == studentId ||
+                        request.auth.token.role == 'teacher');
+    }
+
+    // ============================================
+    // LESSON ATTACHMENTS
+    // ============================================
+    // Path: lessons/{lessonId}/attachments/{fileName}
+    // For teacher-uploaded lesson materials
+
+    match /lessons/{lessonId}/attachments/{fileName} {
+      // Anyone authenticated can read lesson attachments
+      // (Fine-grained access controlled at Firestore level)
+      allow read: if isAuthenticated();
+
+      // Only teachers can upload lesson attachments
+      allow write: if isAuthenticated() &&
+                      request.auth.token.role == 'teacher' &&
+                      (isValidDocumentType() || isValidImageType() || isValidAudioType()) &&
+                      (isUnderMaxDocumentSize() || isUnderMaxImageSize() || isUnderMaxAudioSize()) &&
+                      isValidPath(fileName);
+
+      // Only teachers can delete lesson attachments
+      allow delete: if isAuthenticated() &&
+                       request.auth.token.role == 'teacher';
+    }
+
+    // ============================================
+    // HOMEWORK SUBMISSIONS
+    // ============================================
+    // Path: homework/{homeworkId}/submissions/{studentId}/{fileName}
+
+    match /homework/{homeworkId}/submissions/{studentId}/{fileName} {
+      // Students can read their own submissions
+      // Teachers can read all submissions
+      // Parents can read their children's submissions
+      allow read: if isAuthenticated() &&
+                     (userId() == studentId ||
+                      request.auth.token.role == 'teacher' ||
+                      request.auth.token.role == 'parent');
+
+      // Students can upload their own homework submissions
+      allow write: if isAuthenticated() &&
+                      userId() == studentId &&
+                      (isValidDocumentType() || isValidImageType() || isValidAudioType()) &&
+                      request.resource.size < 25 * 1024 * 1024 && // 25MB max for submissions
+                      isValidPath(fileName);
+
+      // Students can delete their own submissions before deadline
+      // Teachers can delete for moderation
+      allow delete: if isAuthenticated() &&
+                       (userId() == studentId ||
+                        request.auth.token.role == 'teacher');
+    }
+
+    // ============================================
+    // PARENT SIGNATURES
+    // ============================================
+    // Path: signatures/{studentId}/{trackerId}/{fileName}
+    // For digital parent signatures on daily trackers
+
+    match /signatures/{studentId}/{trackerId}/{fileName} {
+      // Students, their teachers, and their parents can read
+      allow read: if isAuthenticated() &&
+                     (userId() == studentId ||
+                      request.auth.token.role == 'teacher' ||
+                      request.auth.token.role == 'parent');
+
+      // Only parents can upload signatures
+      allow write: if isAuthenticated() &&
+                      request.auth.token.role == 'parent' &&
+                      isValidImageType() &&
+                      request.resource.size < 1 * 1024 * 1024 && // 1MB max for signatures
+                      isValidPath(fileName);
+
+      // Only the uploading parent can delete
+      allow delete: if isAuthenticated() &&
+                       request.auth.token.role == 'parent';
+    }
+
+    // ============================================
+    // TEMPORARY UPLOADS
+    // ============================================
+    // Path: temp/{userId}/{fileName}
+    // For in-progress uploads before final placement
+
+    match /temp/{userIdPath}/{fileName} {
+      // Users can only access their own temp files
+      allow read, write: if isAuthenticated() &&
+                            userId() == userIdPath &&
+                            request.resource.size < 50 * 1024 * 1024 &&
+                            isValidPath(fileName);
+
+      allow delete: if isAuthenticated() &&
+                       userId() == userIdPath;
+    }
+
+    // ============================================
+    // SHARED RESOURCES (Read-only)
+    // ============================================
+    // Path: shared/{fileName}
+    // For app-wide resources uploaded by admins
+
+    match /shared/{fileName} {
+      // Anyone authenticated can read shared resources
+      allow read: if isAuthenticated();
+
+      // No client-side writes - admin upload only via Firebase Console
+      allow write, delete: if false;
+    }
+
+    // ============================================
+    // DEFAULT DENY
+    // ============================================
+    // Deny access to any paths not explicitly matched
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

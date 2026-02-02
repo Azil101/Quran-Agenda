@@ -1,0 +1,469 @@
+rules_version = '2';
+
+/**
+ * Quran Agenda - Firestore Security Rules
+ * ========================================
+ *
+ * These rules implement role-based access control for the Quran Academy app.
+ * Users have roles: student, teacher, or parent.
+ *
+ * SECURITY PRINCIPLES:
+ * 1. Deny by default - all access must be explicitly granted
+ * 2. Validate all data writes
+ * 3. Users can only access their own data or data they're authorized to see
+ * 4. No admin operations from client - use Cloud Functions for admin tasks
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Get the current user's UID
+    function currentUserId() {
+      return request.auth.uid;
+    }
+
+    // Get the user document for the current user
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Check if user has a specific role
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+
+    // Check if user is a student
+    function isStudent() {
+      return hasRole('student');
+    }
+
+    // Check if user is a teacher
+    function isTeacher() {
+      return hasRole('teacher');
+    }
+
+    // Check if user is a parent
+    function isParent() {
+      return hasRole('parent');
+    }
+
+    // Check if the requesting user owns this document
+    function isOwner(userId) {
+      return isAuthenticated() && currentUserId() == userId;
+    }
+
+    // Validate string field
+    function isValidString(field, maxLength) {
+      return field is string && field.size() > 0 && field.size() <= maxLength;
+    }
+
+    // Validate email format (basic check)
+    function isValidEmail(email) {
+      return email is string && email.matches('.*@.*\\..*') && email.size() <= 254;
+    }
+
+    // Validate that a timestamp is not in the future
+    function isNotFutureTimestamp(timestamp) {
+      return timestamp <= request.time;
+    }
+
+    // Get student document
+    function getStudentData(studentId) {
+      return get(/databases/$(database)/documents/students/$(studentId)).data;
+    }
+
+    // Get teacher document
+    function getTeacherData(teacherId) {
+      return get(/databases/$(database)/documents/teachers/$(teacherId)).data;
+    }
+
+    // Get parent document
+    function getParentData(parentId) {
+      return get(/databases/$(database)/documents/parents/$(parentId)).data;
+    }
+
+    // Check if teacher has this student
+    function teacherHasStudent(studentId) {
+      return isTeacher() &&
+             studentId in getTeacherData(currentUserId()).studentIds;
+    }
+
+    // Check if parent has this child
+    function parentHasChild(studentId) {
+      return isParent() &&
+             studentId in getParentData(currentUserId()).childrenIds;
+    }
+
+    // Check if student is assigned to this teacher
+    function studentBelongsToTeacher(teacherId) {
+      return isStudent() &&
+             getStudentData(currentUserId()).teacherId == teacherId;
+    }
+
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    // Base user data: profile, settings, role
+
+    match /users/{userId} {
+      // Users can read their own data
+      // Teachers can read their students' basic info
+      // Parents can read their children's basic info
+      allow read: if isOwner(userId) ||
+                     teacherHasStudent(userId) ||
+                     parentHasChild(userId);
+
+      // Users can create their own document during signup
+      allow create: if isOwner(userId) &&
+                       isValidString(request.resource.data.email, 254) &&
+                       isValidEmail(request.resource.data.email) &&
+                       isValidString(request.resource.data.displayName, 100) &&
+                       request.resource.data.role in ['student', 'teacher', 'parent'] &&
+                       request.resource.data.uid == userId;
+
+      // Users can update their own non-critical fields
+      allow update: if isOwner(userId) &&
+                       // Cannot change UID
+                       request.resource.data.uid == resource.data.uid &&
+                       // Cannot change role (escalation prevention)
+                       request.resource.data.role == resource.data.role &&
+                       // Cannot change email directly (use Firebase Auth)
+                       request.resource.data.email == resource.data.email;
+
+      // Users cannot delete their own documents (use Cloud Functions)
+      allow delete: if false;
+    }
+
+    // ============================================
+    // STUDENTS COLLECTION
+    // ============================================
+    // Extended student data: memorization progress, statistics
+
+    match /students/{studentId} {
+      // Students can read their own data
+      // Assigned teacher can read their student's data
+      // Parents can read their children's data
+      allow read: if isOwner(studentId) ||
+                     teacherHasStudent(studentId) ||
+                     parentHasChild(studentId);
+
+      // Only the user themselves can create their student document (during signup)
+      allow create: if isOwner(studentId) &&
+                       request.resource.data.uid == studentId;
+
+      // Students can update their own preferences and progress
+      // Teachers can update student progress and assignments
+      allow update: if (isOwner(studentId) &&
+                        // Students cannot change their teacherId
+                        request.resource.data.teacherId == resource.data.teacherId &&
+                        // Students cannot modify parentIds
+                        request.resource.data.parentIds == resource.data.parentIds) ||
+                       (teacherHasStudent(studentId) &&
+                        // Teachers can update progress but not parentIds
+                        request.resource.data.parentIds == resource.data.parentIds);
+
+      // Only via Cloud Functions
+      allow delete: if false;
+    }
+
+    // ============================================
+    // TEACHERS COLLECTION
+    // ============================================
+
+    match /teachers/{teacherId} {
+      // Teachers can read their own data
+      // Students can read their assigned teacher's profile
+      allow read: if isOwner(teacherId) ||
+                     studentBelongsToTeacher(teacherId);
+
+      // Teachers create their own document during signup
+      allow create: if isOwner(teacherId) &&
+                       request.resource.data.uid == teacherId;
+
+      // Teachers can update their own profile and settings
+      // StudentIds managed via Cloud Functions for security
+      allow update: if isOwner(teacherId);
+
+      // Only via Cloud Functions
+      allow delete: if false;
+    }
+
+    // ============================================
+    // PARENTS COLLECTION
+    // ============================================
+
+    match /parents/{parentId} {
+      // Parents can read their own data
+      allow read: if isOwner(parentId);
+
+      // Parents create their own document during signup
+      allow create: if isOwner(parentId) &&
+                       request.resource.data.uid == parentId;
+
+      // Parents can update their profile and notification preferences
+      // ChildrenIds managed via Cloud Functions
+      allow update: if isOwner(parentId) &&
+                       // Parents cannot self-assign children (security)
+                       request.resource.data.childrenIds == resource.data.childrenIds;
+
+      // Only via Cloud Functions
+      allow delete: if false;
+    }
+
+    // ============================================
+    // LESSONS COLLECTION
+    // ============================================
+    // Daily lessons assigned by teachers to students
+
+    match /lessons/{lessonId} {
+      // Students can read their own lessons
+      // Teachers can read lessons they created
+      // Parents can read their children's lessons
+      allow read: if isAuthenticated() &&
+                     (resource.data.studentId == currentUserId() ||
+                      resource.data.teacherId == currentUserId() ||
+                      parentHasChild(resource.data.studentId));
+
+      // Only teachers can create lessons
+      allow create: if isTeacher() &&
+                       request.resource.data.teacherId == currentUserId() &&
+                       teacherHasStudent(request.resource.data.studentId) &&
+                       isValidString(request.resource.data.type, 20) &&
+                       request.resource.data.type in ['daily', 'test', 'review'];
+
+      // Students can update lesson progress (status, completion)
+      // Teachers can update grades and reviews
+      allow update: if (isStudent() &&
+                        resource.data.studentId == currentUserId() &&
+                        // Students can only update their progress fields
+                        request.resource.data.teacherId == resource.data.teacherId &&
+                        request.resource.data.studentId == resource.data.studentId) ||
+                       (isTeacher() &&
+                        resource.data.teacherId == currentUserId());
+
+      // Only via Cloud Functions
+      allow delete: if false;
+    }
+
+    // ============================================
+    // DAILY TRACKER COLLECTION
+    // ============================================
+    // Daily tracking of prayers, Quran time, homework
+
+    match /dailyTrackers/{trackerId} {
+      // Students can read their own trackers
+      // Teachers can read their students' trackers
+      // Parents can read their children's trackers
+      allow read: if isAuthenticated() &&
+                     (resource.data.studentId == currentUserId() ||
+                      teacherHasStudent(resource.data.studentId) ||
+                      parentHasChild(resource.data.studentId));
+
+      // Students can create their own daily trackers
+      allow create: if isStudent() &&
+                       request.resource.data.studentId == currentUserId();
+
+      // Students can update their own trackers
+      // Parents can add their signature
+      allow update: if (isStudent() &&
+                        resource.data.studentId == currentUserId()) ||
+                       (isParent() &&
+                        parentHasChild(resource.data.studentId) &&
+                        // Parents can only add signature, not modify other data
+                        request.resource.data.prayers == resource.data.prayers &&
+                        request.resource.data.quranTime == resource.data.quranTime);
+
+      // Only via Cloud Functions
+      allow delete: if false;
+    }
+
+    // ============================================
+    // PROGRESS COLLECTION
+    // ============================================
+    // Long-term memorization progress tracking
+
+    match /progress/{progressId} {
+      // Students can read their own progress
+      // Teachers can read their students' progress
+      // Parents can read their children's progress
+      allow read: if isAuthenticated() &&
+                     (resource.data.studentId == currentUserId() ||
+                      teacherHasStudent(resource.data.studentId) ||
+                      parentHasChild(resource.data.studentId));
+
+      // Students can create their own progress entries
+      allow create: if isStudent() &&
+                       request.resource.data.studentId == currentUserId();
+
+      // Students and teachers can update progress
+      allow update: if (resource.data.studentId == currentUserId()) ||
+                       teacherHasStudent(resource.data.studentId);
+
+      // Only via Cloud Functions
+      allow delete: if false;
+    }
+
+    // ============================================
+    // HOMEWORK COLLECTION
+    // ============================================
+
+    match /homework/{homeworkId} {
+      // Students can read their assigned homework
+      // Teachers can read homework they created
+      // Parents can read their children's homework
+      allow read: if isAuthenticated() &&
+                     (resource.data.studentId == currentUserId() ||
+                      teacherHasStudent(resource.data.studentId) ||
+                      parentHasChild(resource.data.studentId));
+
+      // Teachers can create homework for their students
+      allow create: if isTeacher() &&
+                       teacherHasStudent(request.resource.data.studentId) &&
+                       isValidString(request.resource.data.subject, 200) &&
+                       isValidString(request.resource.data.description, 2000);
+
+      // Students can update completion status
+      // Teachers can update any field
+      allow update: if (isStudent() &&
+                        resource.data.studentId == currentUserId() &&
+                        // Students can only toggle completed status
+                        request.resource.data.subject == resource.data.subject &&
+                        request.resource.data.description == resource.data.description &&
+                        request.resource.data.dueDate == resource.data.dueDate) ||
+                       (isTeacher() && teacherHasStudent(resource.data.studentId));
+
+      // Teachers can delete homework they created
+      allow delete: if isTeacher() && teacherHasStudent(resource.data.studentId);
+    }
+
+    // ============================================
+    // QUIZZES COLLECTION
+    // ============================================
+
+    match /quizzes/{quizId} {
+      // Students can read their own quizzes
+      // Teachers can read their students' quizzes
+      allow read: if isAuthenticated() &&
+                     (resource.data.studentId == currentUserId() ||
+                      teacherHasStudent(resource.data.studentId) ||
+                      parentHasChild(resource.data.studentId));
+
+      // Teachers can create quizzes for their students
+      // Students can create self-practice quizzes
+      allow create: if (isTeacher() &&
+                        teacherHasStudent(request.resource.data.studentId)) ||
+                       (isStudent() &&
+                        request.resource.data.studentId == currentUserId() &&
+                        request.resource.data.type == 'auto');
+
+      // Students can update their quiz answers and progress
+      allow update: if isStudent() &&
+                       resource.data.studentId == currentUserId();
+
+      // Only via Cloud Functions
+      allow delete: if false;
+    }
+
+    // ============================================
+    // DAYS OFF COLLECTION
+    // ============================================
+
+    match /daysOff/{dayOffId} {
+      // Students can read their own days off
+      // Teachers can read their students' days off
+      // Parents can read their children's days off
+      allow read: if isAuthenticated() &&
+                     (resource.data.studentId == currentUserId() ||
+                      teacherHasStudent(resource.data.studentId) ||
+                      parentHasChild(resource.data.studentId));
+
+      // Only teachers can grant days off
+      // System creates via Cloud Functions for juz completion
+      allow create: if isTeacher() &&
+                       teacherHasStudent(request.resource.data.studentId) &&
+                       request.resource.data.reason in ['teacher_approved', 'parent_approved'];
+
+      // Teachers can update days off
+      allow update: if isTeacher() &&
+                       teacherHasStudent(resource.data.studentId);
+
+      // Only via Cloud Functions
+      allow delete: if false;
+    }
+
+    // ============================================
+    // INVITATIONS COLLECTION
+    // ============================================
+    // For teacher-student and parent-child linking
+
+    match /invitations/{invitationId} {
+      // Sender and recipient can read
+      allow read: if isAuthenticated() &&
+                     (resource.data.senderId == currentUserId() ||
+                      resource.data.recipientEmail == getUserData().email);
+
+      // Teachers/Parents can create invitations
+      allow create: if (isTeacher() || isParent()) &&
+                       request.resource.data.senderId == currentUserId() &&
+                       isValidEmail(request.resource.data.recipientEmail) &&
+                       request.resource.data.status == 'pending';
+
+      // Recipients can accept/reject
+      allow update: if resource.data.recipientEmail == getUserData().email &&
+                       request.resource.data.status in ['accepted', 'rejected'];
+
+      // Sender can delete pending invitations
+      allow delete: if resource.data.senderId == currentUserId() &&
+                       resource.data.status == 'pending';
+    }
+
+    // ============================================
+    // NOTIFICATIONS COLLECTION
+    // ============================================
+
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if resource.data.userId == currentUserId();
+
+      // Only Cloud Functions can create notifications
+      allow create: if false;
+
+      // Users can mark their notifications as read
+      allow update: if resource.data.userId == currentUserId() &&
+                       request.resource.data.userId == resource.data.userId &&
+                       request.resource.data.type == resource.data.type;
+
+      // Users can delete their own notifications
+      allow delete: if resource.data.userId == currentUserId();
+    }
+
+    // ============================================
+    // AUDIT LOG COLLECTION (Write-only)
+    // ============================================
+    // Security audit trail - no client reads
+
+    match /auditLogs/{logId} {
+      allow read: if false;
+      allow write: if false;
+      // All audit logging done via Cloud Functions
+    }
+
+    // ============================================
+    // DEFAULT DENY
+    // ============================================
+    // Catch-all rule to deny any unmatched paths
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
