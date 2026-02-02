@@ -88,9 +88,11 @@ export class QuranService {
     includeTranslation: boolean = false
   ): Promise<VersesResponse> {
     try {
-      const params: Record<string, number> = {
+      const params: Record<string, string | number> = {
         page,
         per_page: perPage,
+        // CRITICAL: Must explicitly request text_uthmani field from API v4
+        fields: 'text_uthmani',
       };
 
       // Add translation parameter if requested
@@ -119,7 +121,10 @@ export class QuranService {
     includeTranslation: boolean = false
   ): Promise<Verse> {
     try {
-      const params: Record<string, number> = {};
+      const params: Record<string, string | number> = {
+        // CRITICAL: Must explicitly request text_uthmani field from API v4
+        fields: 'text_uthmani',
+      };
 
       if (includeTranslation) {
         params.translations = QURAN_API.DEFAULT_TRANSLATION_ID;
@@ -146,7 +151,10 @@ export class QuranService {
     includeTranslation: boolean = false
   ): Promise<Verse[]> {
     try {
-      const params: Record<string, number> = {};
+      const params: Record<string, string | number> = {
+        // CRITICAL: Must explicitly request text_uthmani field from API v4
+        fields: 'text_uthmani',
+      };
 
       if (includeTranslation) {
         params.translations = QURAN_API.DEFAULT_TRANSLATION_ID;
@@ -172,7 +180,10 @@ export class QuranService {
     includeTranslation: boolean = false
   ): Promise<Verse[]> {
     try {
-      const params: Record<string, number> = {};
+      const params: Record<string, string | number> = {
+        // CRITICAL: Must explicitly request text_uthmani field from API v4
+        fields: 'text_uthmani',
+      };
 
       if (includeTranslation) {
         params.translations = QURAN_API.DEFAULT_TRANSLATION_ID;
