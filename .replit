@@ -1,12 +1,20 @@
-run = "cd web-app && npm install && npm run dev"
+run = "cd web-app && npm install && npm run dev -- --host 0.0.0.0"
 entrypoint = "web-app/src/main.tsx"
+modules = ["nodejs-20"]
 
 [nix]
-channel = "stable-22_11"
+channel = "stable-24_05"
 
 [env]
 PATH = "/home/runner/$REPL_SLUG/.config/npm/node_global/bin:/home/runner/$REPL_SLUG/node_modules/.bin"
 npm_config_prefix = "/home/runner/$REPL_SLUG/.config/npm/node_global"
+VITE_FIREBASE_API_KEY = "AIzaSyDldHIN5FTn3VtdOo1glaGwNzkhFKMBIfo"
+VITE_FIREBASE_AUTH_DOMAIN = "quranagenda-b3f9a.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID = "quranagenda-b3f9a"
+VITE_FIREBASE_STORAGE_BUCKET = "quranagenda-b3f9a.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID = "990096038405"
+VITE_FIREBASE_APP_ID = "1:990096038405:web:9c4211674e1cfba39eda6c"
+VITE_QURAN_API_BASE_URL = "https://api.quran.com/api/v4"
 
 [packager]
 language = "nodejs"
