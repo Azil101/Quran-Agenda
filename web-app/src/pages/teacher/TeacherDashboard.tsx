@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button, Card, CardHeader, CardTitle, CardContent } from '../../components/shared';
+import { InviteCodeGenerator } from '../../components/teacher/InviteCodeGenerator';
 
 export const TeacherDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -24,24 +25,20 @@ export const TeacherDashboard: React.FC = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Invite Code Generator */}
+          <InviteCodeGenerator />
+
+          {/* Placeholder Cards - To be implemented in Phase 2 */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">My Students</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 View and manage your students
               </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Assign Lessons</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Create daily lesson assignments
+              <p className="text-xs text-muted-foreground/70 mt-2">
+                Coming in Phase 2
               </p>
             </CardContent>
           </Card>
@@ -51,12 +48,16 @@ export const TeacherDashboard: React.FC = () => {
               <CardTitle className="text-lg">Student Progress</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Monitor student performance
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-2">
+                Coming in Phase 2
               </p>
             </CardContent>
           </Card>
 
+          {/* Quran Reader Link */}
           <Link to="/teacher/quran" className="block">
             <Card className="h-full hover:border-primary transition-colors cursor-pointer">
               <CardHeader>
@@ -68,7 +69,7 @@ export const TeacherDashboard: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Browse Quran and assign lesson ranges
                 </p>
                 <Button className="mt-4 w-full" variant="outline" size="sm">

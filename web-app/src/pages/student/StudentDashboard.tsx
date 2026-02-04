@@ -2,6 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button, Card, CardHeader, CardTitle, CardContent } from '../../components/shared';
+import { DailyTracker } from '../../components/student/DailyTracker';
+import { CurrentLessonCard } from '../../components/student/CurrentLessonCard';
+import { JoinWithCode } from '../../components/student/JoinWithCode';
 
 export const StudentDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -23,40 +26,20 @@ export const StudentDashboard: React.FC = () => {
           </Button>
         </div>
 
+        {/* Daily Tracker - Full Width */}
+        <DailyTracker />
+
+        {/* Grid for other components */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Today's Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Your daily tracker will appear here
-              </p>
-            </CardContent>
-          </Card>
+          {/* Current Lesson */}
+          <div className="md:col-span-2">
+            <CurrentLessonCard />
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Memorization Stats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Track your ayahs, surahs, and juz
-              </p>
-            </CardContent>
-          </Card>
+          {/* Join Teacher */}
+          <JoinWithCode />
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Current Lesson</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Today's lesson from your teacher
-              </p>
-            </CardContent>
-          </Card>
-
+          {/* Quran Reader Link */}
           <Link to="/student/quran" className="block">
             <Card className="h-full hover:border-primary transition-colors cursor-pointer">
               <CardHeader>
