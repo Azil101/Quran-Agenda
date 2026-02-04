@@ -8,8 +8,7 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp,
-  Timestamp
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { logger } from '../lib/logger';
@@ -29,9 +28,9 @@ export class LessonService {
     teacherId: string,
     studentId: string,
     oldRevision: LessonSection,
-    newMaterial: LessonSection,
-    dueDate: Date,
-    notes?: string
+    newLesson: LessonSection,
+    date: Date,
+    _notes?: string
   ): Promise<string> {
     try {
       const lessonRef = doc(collection(db, this.COLLECTION));
@@ -40,16 +39,11 @@ export class LessonService {
       const lesson: Partial<Lesson> = {
         teacherId,
         studentId,
+        date,
+        type: 'daily',
         oldRevision,
-        newMaterial,
-        dueDate: Timestamp.fromDate(dueDate),
-        notes: notes || '',
-        status: 'assigned',
-        assignedAt: serverTimestamp(),
-        completedAt: null,
-        grade: null,
-        teacherReview: null,
-        parentReview: null
+        newLesson,
+        status: 'assigned'
       };
 
       await setDoc(lessonRef, lesson);
@@ -133,7 +127,7 @@ export class LessonService {
       const q = query(
         collection(db, this.COLLECTION),
         where('teacherId', '==', teacherId),
-        orderBy('assignedAt', 'desc')
+        orderBy('date', 'desc')
       );
 
       const querySnap = await getDocs(q);
@@ -177,25 +171,22 @@ export class LessonService {
    */
   static async gradeLesson(
     lessonId: string,
-    grade: string,
-    review: string,
-    stars?: number
+    finalGrade: 'A' | 'B' | 'C' | 'INC',
+    comments: string
   ): Promise<void> {
     try {
       const lessonRef = doc(db, this.COLLECTION, lessonId);
 
       await updateDoc(lessonRef, {
-        status: 'graded',
-        grade,
+        status: 'reviewed',
         teacherReview: {
-          grade,
-          stars: stars || null,
-          comments: review,
-          reviewedAt: serverTimestamp()
+          reviewedAt: new Date(),
+          comments,
+          finalGrade
         }
       });
 
-      logger.info(`Lesson ${lessonId} graded as ${grade}`);
+      logger.info(`Lesson ${lessonId} graded as ${finalGrade}`);
     } catch (error) {
       logger.error('Failed to grade lesson', error as Error);
       throw new Error('Failed to grade lesson.');
@@ -235,7 +226,7 @@ export class LessonService {
     total: number;
     assigned: number;
     completed: number;
-    graded: number;
+    reviewed: number;
     averageGrade: string | null;
   }> {
     try {
@@ -245,18 +236,18 @@ export class LessonService {
         total: lessons.length,
         assigned: lessons.filter(l => l.status === 'assigned').length,
         completed: lessons.filter(l => l.status === 'completed').length,
-        graded: lessons.filter(l => l.status === 'graded').length,
+        reviewed: lessons.filter(l => l.status === 'reviewed').length,
         averageGrade: null as string | null
       };
 
-      // Calculate average grade (for graded lessons)
-      const gradedLessons = lessons.filter(l => l.grade);
-      if (gradedLessons.length > 0) {
+      // Calculate average grade (for reviewed lessons)
+      const reviewedLessons = lessons.filter(l => l.teacherReview?.finalGrade);
+      if (reviewedLessons.length > 0) {
         const gradeMap: Record<string, number> = { 'A': 4, 'B': 3, 'C': 2, 'INC': 0 };
-        const totalGradePoints = gradedLessons.reduce((sum, lesson) => {
-          return sum + (gradeMap[lesson.grade || 'INC'] || 0);
+        const totalGradePoints = reviewedLessons.reduce((sum, lesson) => {
+          return sum + (gradeMap[lesson.teacherReview?.finalGrade || 'INC'] || 0);
         }, 0);
-        const avgPoints = totalGradePoints / gradedLessons.length;
+        const avgPoints = totalGradePoints / reviewedLessons.length;
 
         // Convert back to letter grade
         if (avgPoints >= 3.5) stats.averageGrade = 'A';
@@ -272,7 +263,7 @@ export class LessonService {
         total: 0,
         assigned: 0,
         completed: 0,
-        graded: 0,
+        reviewed: 0,
         averageGrade: null
       };
     }

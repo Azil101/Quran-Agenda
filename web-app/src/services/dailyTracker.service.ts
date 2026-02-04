@@ -6,9 +6,7 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
-  serverTimestamp,
-  Timestamp
+  orderBy
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { logger } from '../lib/logger';
@@ -22,32 +20,34 @@ export class DailyTrackerService {
   private static readonly COLLECTION = 'dailyTracker';
 
   /**
-   * Generate tracker ID from userId and date (YYYY-MM-DD format)
+   * Generate tracker ID from studentId and date (YYYY-MM-DD format)
    */
-  private static generateTrackerId(userId: string, date: Date): string {
+  private static generateTrackerId(studentId: string, date: Date): string {
     const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
-    return `${userId}_${dateStr}`;
+    return `${studentId}_${dateStr}`;
   }
 
   /**
    * Create or update daily tracker entry
    */
   static async saveDailyTracker(
-    userId: string,
+    studentId: string,
     date: Date,
-    timeMinutes: number,
+    quranTime: number,
     prayers: Prayers
   ): Promise<void> {
     try {
-      const trackerId = this.generateTrackerId(userId, date);
+      const trackerId = this.generateTrackerId(studentId, date);
       const trackerRef = doc(db, this.COLLECTION, trackerId);
 
       const trackerData: Partial<DailyTracker> = {
-        userId,
-        date: Timestamp.fromDate(date),
-        timeSpentMinutes: timeMinutes,
+        studentId,
+        date,
+        quranTime,
         prayers,
-        updatedAt: serverTimestamp()
+        lessonIds: [],
+        homework: [],
+        completed: quranTime > 0 || Object.values(prayers).some(Boolean)
       };
 
       // Check if entry exists
@@ -56,14 +56,19 @@ export class DailyTrackerService {
       if (existingDoc.exists()) {
         // Update existing entry
         await setDoc(trackerRef, trackerData, { merge: true });
-        logger.info(`Updated daily tracker for user ${userId} on ${date.toISOString().split('T')[0]}`);
+        logger.info(`Updated daily tracker for student ${studentId} on ${date.toISOString().split('T')[0]}`);
       } else {
-        // Create new entry
+        // Create new entry with evaluation
         await setDoc(trackerRef, {
           ...trackerData,
-          createdAt: serverTimestamp()
+          evaluation: {
+            oldRevisionGrade: null,
+            newLessonGrade: null,
+            stars: null,
+            teacherComments: ''
+          }
         });
-        logger.info(`Created daily tracker for user ${userId} on ${date.toISOString().split('T')[0]}`);
+        logger.info(`Created daily tracker for student ${studentId} on ${date.toISOString().split('T')[0]}`);
       }
     } catch (error) {
       logger.error('Failed to save daily tracker', error as Error);
@@ -74,9 +79,9 @@ export class DailyTrackerService {
   /**
    * Get daily tracker for a specific date
    */
-  static async getDailyTracker(userId: string, date: Date): Promise<DailyTracker | null> {
+  static async getDailyTracker(studentId: string, date: Date): Promise<DailyTracker | null> {
     try {
-      const trackerId = this.generateTrackerId(userId, date);
+      const trackerId = this.generateTrackerId(studentId, date);
       const trackerRef = doc(db, this.COLLECTION, trackerId);
       const trackerSnap = await getDoc(trackerRef);
 
@@ -98,16 +103,16 @@ export class DailyTrackerService {
    * Get daily trackers for a date range
    */
   static async getDailyTrackersInRange(
-    userId: string,
+    studentId: string,
     startDate: Date,
     endDate: Date
   ): Promise<DailyTracker[]> {
     try {
       const q = query(
         collection(db, this.COLLECTION),
-        where('userId', '==', userId),
-        where('date', '>=', Timestamp.fromDate(startDate)),
-        where('date', '<=', Timestamp.fromDate(endDate)),
+        where('studentId', '==', studentId),
+        where('date', '>=', startDate),
+        where('date', '<=', endDate),
         orderBy('date', 'desc')
       );
 
@@ -129,9 +134,9 @@ export class DailyTrackerService {
   }
 
   /**
-   * Get tracker statistics for a user
+   * Get tracker statistics for a student
    */
-  static async getTrackerStats(userId: string, days: number = 30): Promise<{
+  static async getTrackerStats(studentId: string, days: number = 30): Promise<{
     totalMinutes: number;
     averageMinutes: number;
     daysTracked: number;
@@ -144,7 +149,7 @@ export class DailyTrackerService {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      const trackers = await this.getDailyTrackersInRange(userId, startDate, endDate);
+      const trackers = await this.getDailyTrackersInRange(studentId, startDate, endDate);
 
       let totalMinutes = 0;
       let prayersCompleted = 0;
@@ -153,7 +158,7 @@ export class DailyTrackerService {
 
       // Calculate totals
       trackers.forEach((tracker) => {
-        totalMinutes += tracker.timeSpentMinutes;
+        totalMinutes += tracker.quranTime;
 
         // Count prayers
         const prayers = tracker.prayers;
@@ -163,16 +168,16 @@ export class DailyTrackerService {
       });
 
       // Calculate current streak (consecutive days)
-      const today = new Date().toISOString().split('T')[0];
       let checkDate = new Date();
 
       while (true) {
         const dateStr = checkDate.toISOString().split('T')[0];
-        const tracker = trackers.find(t =>
-          t.date.toDate().toISOString().split('T')[0] === dateStr
-        );
+        const tracker = trackers.find(t => {
+          const trackerDate = t.date instanceof Date ? t.date : new Date(t.date);
+          return trackerDate.toISOString().split('T')[0] === dateStr;
+        });
 
-        if (tracker && tracker.timeSpentMinutes > 0) {
+        if (tracker && tracker.quranTime > 0) {
           currentStreak++;
           checkDate.setDate(checkDate.getDate() - 1);
         } else {
@@ -204,9 +209,9 @@ export class DailyTrackerService {
   /**
    * Check if student has tracked today
    */
-  static async hasTrackedToday(userId: string): Promise<boolean> {
+  static async hasTrackedToday(studentId: string): Promise<boolean> {
     const today = new Date();
-    const tracker = await this.getDailyTracker(userId, today);
-    return tracker !== null && tracker.timeSpentMinutes > 0;
+    const tracker = await this.getDailyTracker(studentId, today);
+    return tracker !== null && tracker.quranTime > 0;
   }
 }

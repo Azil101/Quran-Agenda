@@ -1,12 +1,8 @@
 import {
-  collection,
   doc,
   setDoc,
   getDoc,
-  getDocs,
   updateDoc,
-  query,
-  where,
   arrayUnion,
   serverTimestamp,
   Timestamp
@@ -20,7 +16,6 @@ import { logger } from '../lib/logger';
  */
 export class RelationshipService {
   private static readonly INVITES_COLLECTION = 'invites';
-  private static readonly USERS_COLLECTION = 'users';
   private static readonly STUDENTS_COLLECTION = 'students';
   private static readonly TEACHERS_COLLECTION = 'teachers';
   private static readonly PARENTS_COLLECTION = 'parents';

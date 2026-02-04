@@ -6,7 +6,7 @@ import { logger } from '../../lib/logger';
 
 export const DailyTracker: React.FC = () => {
   const { user } = useAuth();
-  const [timeMinutes, setTimeMinutes] = useState<number>(0);
+  const [quranTime, setQuranTime] = useState<number>(0);
   const [prayers, setPrayers] = useState({
     fajr: false,
     dhuhr: false,
@@ -38,7 +38,7 @@ export const DailyTracker: React.FC = () => {
       const tracker = await DailyTrackerService.getDailyTracker(user.uid, today);
 
       if (tracker) {
-        setTimeMinutes(tracker.timeSpentMinutes);
+        setQuranTime(tracker.quranTime);
         setPrayers(tracker.prayers);
       }
     } catch (error) {
@@ -65,7 +65,7 @@ export const DailyTracker: React.FC = () => {
 
     try {
       const today = new Date();
-      await DailyTrackerService.saveDailyTracker(user.uid, today, timeMinutes, prayers);
+      await DailyTrackerService.saveDailyTracker(user.uid, today, quranTime, prayers);
       setSaved(true);
 
       // Reload stats
@@ -148,13 +148,13 @@ export const DailyTracker: React.FC = () => {
                 min="0"
                 max="240"
                 step="5"
-                value={timeMinutes}
-                onChange={(e) => setTimeMinutes(Number(e.target.value))}
+                value={quranTime}
+                onChange={(e) => setQuranTime(Number(e.target.value))}
                 className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
               />
               <div className="w-20 text-right">
                 <span className="text-2xl font-bold text-primary">
-                  {formatTime(timeMinutes)}
+                  {formatTime(quranTime)}
                 </span>
               </div>
             </div>

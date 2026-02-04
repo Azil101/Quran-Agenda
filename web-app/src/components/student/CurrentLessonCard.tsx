@@ -72,7 +72,7 @@ export const CurrentLessonCard: React.FC = () => {
     );
   }
 
-  const isCompleted = lesson.status === 'completed' || lesson.status === 'graded';
+  const isCompleted = lesson.status === 'completed' || lesson.status === 'reviewed';
 
   return (
     <Card className={isCompleted ? 'border-primary bg-primary/5' : ''}>
@@ -86,46 +86,42 @@ export const CurrentLessonCard: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Old Revision */}
-        <div>
-          <h4 className="text-sm font-medium mb-1">Old Revision</h4>
-          <p className="text-sm text-muted-foreground">
-            {lesson.oldRevision.fromSurah === lesson.oldRevision.toSurah ? (
-              <>
-                Surah {lesson.oldRevision.fromSurah}, Ayah {lesson.oldRevision.fromAyah} -{' '}
-                {lesson.oldRevision.toAyah}
-              </>
-            ) : (
-              <>
-                Surah {lesson.oldRevision.fromSurah}:{lesson.oldRevision.fromAyah} to Surah{' '}
-                {lesson.oldRevision.toSurah}:{lesson.oldRevision.toAyah}
-              </>
-            )}
-          </p>
-        </div>
+        {lesson.oldRevision && (
+          <div>
+            <h4 className="text-sm font-medium mb-1">Old Revision</h4>
+            <p className="text-sm text-muted-foreground">
+              {lesson.oldRevision.fromSurah === lesson.oldRevision.toSurah ? (
+                <>
+                  Surah {lesson.oldRevision.fromSurah}, Ayah {lesson.oldRevision.fromAyah} -{' '}
+                  {lesson.oldRevision.toAyah}
+                </>
+              ) : (
+                <>
+                  Surah {lesson.oldRevision.fromSurah}:{lesson.oldRevision.fromAyah} to Surah{' '}
+                  {lesson.oldRevision.toSurah}:{lesson.oldRevision.toAyah}
+                </>
+              )}
+            </p>
+          </div>
+        )}
 
         {/* New Material */}
-        <div>
-          <h4 className="text-sm font-medium mb-1">New Material</h4>
-          <p className="text-sm text-muted-foreground">
-            {lesson.newMaterial.fromSurah === lesson.newMaterial.toSurah ? (
-              <>
-                Surah {lesson.newMaterial.fromSurah}, Ayah {lesson.newMaterial.fromAyah} -{' '}
-                {lesson.newMaterial.toAyah}
-              </>
-            ) : (
-              <>
-                Surah {lesson.newMaterial.fromSurah}:{lesson.newMaterial.fromAyah} to Surah{' '}
-                {lesson.newMaterial.toSurah}:{lesson.newMaterial.toAyah}
-              </>
-            )}
-          </p>
-        </div>
-
-        {/* Notes */}
-        {lesson.notes && (
+        {lesson.newLesson && (
           <div>
-            <h4 className="text-sm font-medium mb-1">Teacher's Notes</h4>
-            <p className="text-sm text-muted-foreground">{lesson.notes}</p>
+            <h4 className="text-sm font-medium mb-1">New Material</h4>
+            <p className="text-sm text-muted-foreground">
+              {lesson.newLesson.fromSurah === lesson.newLesson.toSurah ? (
+                <>
+                  Surah {lesson.newLesson.fromSurah}, Ayah {lesson.newLesson.fromAyah} -{' '}
+                  {lesson.newLesson.toAyah}
+                </>
+              ) : (
+                <>
+                  Surah {lesson.newLesson.fromSurah}:{lesson.newLesson.fromAyah} to Surah{' '}
+                  {lesson.newLesson.toSurah}:{lesson.newLesson.toAyah}
+                </>
+              )}
+            </p>
           </div>
         )}
 
@@ -133,7 +129,7 @@ export const CurrentLessonCard: React.FC = () => {
         <div>
           <h4 className="text-sm font-medium mb-1">Due Date</h4>
           <p className="text-sm text-muted-foreground">
-            {lesson.dueDate.toDate().toLocaleDateString('en-US', {
+            {new Date(lesson.date).toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
@@ -142,17 +138,12 @@ export const CurrentLessonCard: React.FC = () => {
           </p>
         </div>
 
-        {/* Grade (if graded) */}
-        {lesson.status === 'graded' && lesson.grade && (
+        {/* Grade (if reviewed) */}
+        {lesson.status === 'reviewed' && lesson.teacherReview?.finalGrade && (
           <div>
             <h4 className="text-sm font-medium mb-1">Grade</h4>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-primary">{lesson.grade}</span>
-              {lesson.teacherReview?.stars && (
-                <span className="text-yellow-500">
-                  {'⭐'.repeat(lesson.teacherReview.stars)}
-                </span>
-              )}
+              <span className="text-2xl font-bold text-primary">{lesson.teacherReview.finalGrade}</span>
             </div>
             {lesson.teacherReview?.comments && (
               <p className="text-sm text-muted-foreground mt-2">
