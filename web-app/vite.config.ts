@@ -7,10 +7,12 @@ export default defineConfig({
   // Use '/' for Replit and other platforms, '/Quran-Agenda/' for GitHub Pages
   base: process.env.VITE_BASE_PATH || '/',
   server: {
-    host: '0.0.0.0',
+    host: true,
     port: 5173,
+    strictPort: false,
     hmr: {
-      clientPort: 443
+      clientPort: 443,
+      host: true
     }
   }
 })
